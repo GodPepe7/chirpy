@@ -2,9 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/godpepe7/chirpy/internal/db"
+	"github.com/godpepe7/chirpy/internal/middleware"
 )
 
 type parameters struct {
@@ -17,13 +21,14 @@ func main() {
 
 	serveMux := http.NewServeMux()
 	fsHandler := http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))
-	apiConfig := apiConfig{FileserverHits: 0}
+	apiConfig := middleware.ApiConfig{FileserverHits: 0}
 
-	serveMux.Handle("/app/*", apiConfig.middlewareMetricsInc(fsHandler))
+	serveMux.Handle("/app/*", apiConfig.MiddlewareMetricsInc(fsHandler))
 	serveMux.HandleFunc("GET /api/healthz", healthzHandler)
-	serveMux.HandleFunc("GET /api/reset", apiConfig.resetHandler)
-	serveMux.HandleFunc("POST /api/validate_chirp", validateChirpHandler)
-	serveMux.HandleFunc("GET /admin/metrics", apiConfig.metricsHandler)
+	serveMux.HandleFunc("GET /api/reset", apiConfig.ResetHandler)
+	serveMux.HandleFunc("GET /api/chirps", getChirpHandler)
+	serveMux.HandleFunc("POST /api/chirps", postChirpHandler)
+	serveMux.HandleFunc("GET /admin/metrics", apiConfig.MetricsHandler)
 
 	server := &http.Server{Addr: ":" + port, Handler: serveMux}
 
@@ -37,7 +42,12 @@ func healthzHandler(rw http.ResponseWriter, req *http.Request) {
 	rw.Write([]byte(http.StatusText(http.StatusOK)))
 }
 
-func validateChirpHandler(rw http.ResponseWriter, req *http.Request) {
+func getChirpHandler(rw http.ResponseWriter, req *http.Request) {
+	rw.Header().Set("Content-Type", "application/json")
+
+}
+
+func postChirpHandler(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(req.Body)
 	params := parameters{}
@@ -52,12 +62,18 @@ func validateChirpHandler(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	type cleanedResponse struct {
-		CleanedBody string `json:"cleaned_body"`
-	}
-
 	cleanedString := replaceBadWords(params.Body)
-	respondWithJSON(rw, 200, cleanedResponse{CleanedBody: cleanedString})
+	db, err := db.NewDB("database")
+	if err != nil {
+		fmt.Println(err)
+		respondWithError(rw, 500, "Something went wrong")
+	}
+	chirp, err := db.CreateChirp(cleanedString)
+	if err != nil {
+		fmt.Println(err)
+		respondWithError(rw, 500, "Something went wrong")
+	}
+	respondWithJSON(rw, 200, chirp)
 }
 
 func respondWithError(rw http.ResponseWriter, code int, msg string) {
