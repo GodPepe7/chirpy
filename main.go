@@ -12,8 +12,12 @@ import (
 	"github.com/godpepe7/chirpy/internal/middleware"
 )
 
-type parameters struct {
+type chirpParams struct {
 	Body string `json:"body"`
+}
+
+type userParams struct {
+	Email string `json:"email"`
 }
 
 var database *db.DB
@@ -32,6 +36,7 @@ func main() {
 	serveMux.HandleFunc("GET /api/chirps", getChirpHandler)
 	serveMux.HandleFunc("GET /api/chirps/{id}", getChirpByIdHandler)
 	serveMux.HandleFunc("POST /api/chirps", postChirpHandler)
+	serveMux.HandleFunc("POST /api/users", postUserHandler)
 	serveMux.HandleFunc("GET /admin/metrics", apiConfig.MetricsHandler)
 
 	server := &http.Server{Addr: ":" + port, Handler: serveMux}
@@ -82,7 +87,7 @@ func getChirpByIdHandler(rw http.ResponseWriter, req *http.Request) {
 func postChirpHandler(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(req.Body)
-	params := parameters{}
+	params := chirpParams{}
 	err := decoder.Decode(&params)
 
 	if err != nil {
@@ -102,6 +107,26 @@ func postChirpHandler(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	respondWithJSON(rw, 201, chirp)
+}
+
+func postUserHandler(rw http.ResponseWriter, req *http.Request) {
+	rw.Header().Set("Content-Type", "application/json")
+	decoder := json.NewDecoder(req.Body)
+	params := userParams{}
+	err := decoder.Decode(&params)
+	if err != nil {
+		fmt.Println(err)
+		respondWithError(rw, 500, "Something went wrong")
+		return
+	}
+
+	user, err := database.CreateUser(params.Email)
+	if err != nil {
+		fmt.Println(err)
+		respondWithError(rw, 500, "Something went wrong creating the user")
+		return
+	}
+	respondWithJSON(rw, 201, user)
 }
 
 func respondWithError(rw http.ResponseWriter, code int, msg string) {
