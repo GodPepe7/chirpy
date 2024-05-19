@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"sync"
 )
@@ -57,4 +58,15 @@ func (db *DB) writeDB(dbStruct DBStructure) error {
 		return fmt.Errorf("error while writing '%v' to file '%v': %v", string(jsonByte), db.path, err)
 	}
 	return nil
+}
+
+func RemoveDBFile() {
+	filePath := "../../database.json"
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return
+	}
+	e := os.Remove(filePath)
+	if e != nil {
+		log.Fatal(e)
+	}
 }

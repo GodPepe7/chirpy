@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -23,6 +24,12 @@ type userParams struct {
 var database *db.DB
 
 func main() {
+	dbg := flag.Bool("debug", false, "Enable debug mode")
+	flag.Parse()
+	if *dbg {
+		db.RemoveDBFile()
+	}
+
 	const filepathRoot = "."
 	const port = "8080"
 

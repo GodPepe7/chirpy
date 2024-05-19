@@ -1,24 +1,11 @@
 package db
 
 import (
-	"log"
-	"os"
 	"testing"
 )
 
-func removeDBFile() {
-	filePath := "../../database.json"
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		return
-	}
-	e := os.Remove(filePath)
-	if e != nil {
-		log.Fatal(e)
-	}
-}
-
 func TestCreateChirp(t *testing.T) {
-	removeDBFile()
+	RemoveDBFile()
 	database, err := NewDB("database")
 	if err != nil {
 		t.Errorf("expected no errors: %v", err)
