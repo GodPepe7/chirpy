@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/godpepe7/chirpy/internal/db"
@@ -29,6 +30,7 @@ func main() {
 	serveMux.HandleFunc("GET /api/healthz", healthzHandler)
 	serveMux.HandleFunc("GET /api/reset", apiConfig.ResetHandler)
 	serveMux.HandleFunc("GET /api/chirps", getChirpHandler)
+	serveMux.HandleFunc("GET /api/chirps/{id}", getChirpByIdHandler)
 	serveMux.HandleFunc("POST /api/chirps", postChirpHandler)
 	serveMux.HandleFunc("GET /admin/metrics", apiConfig.MetricsHandler)
 
@@ -56,8 +58,25 @@ func getChirpHandler(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 		respondWithError(rw, 500, "Something went wrong with getting chirps")
+		return
 	}
 	respondWithJSON(rw, 200, chirps)
+}
+
+func getChirpByIdHandler(rw http.ResponseWriter, req *http.Request) {
+	rw.Header().Set("Content-Type", "application/json")
+	idValue := req.PathValue("id")
+	chirpID, err := strconv.Atoi(idValue)
+	if err != nil {
+		respondWithError(rw, 400, "Something went wrong parsing the id, has to be a number")
+		return
+	}
+	chirp, err := database.GetChirpById(chirpID)
+	if err != nil {
+		respondWithError(rw, 404, fmt.Sprintf("Chirp with ID %v doesn't exist", chirpID))
+		return
+	}
+	respondWithJSON(rw, 200, chirp)
 }
 
 func postChirpHandler(rw http.ResponseWriter, req *http.Request) {
@@ -80,6 +99,7 @@ func postChirpHandler(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 		respondWithError(rw, 500, "Something went wrong")
+		return
 	}
 	respondWithJSON(rw, 201, chirp)
 }

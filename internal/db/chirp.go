@@ -80,6 +80,20 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 	return chirp, nil
 }
 
+func (db *DB) GetChirpById(id int) (Chirp, error) {
+	db.mux.Lock()
+	defer db.mux.Unlock()
+	dbStruct, err := db.loadDB()
+	if err != nil {
+		return Chirp{}, err
+	}
+	chirp, ok := dbStruct.Chirps[id]
+	if !ok {
+		return Chirp{}, fmt.Errorf("chirpID %v doesn't exist in db", id)
+	}
+	return chirp, nil
+}
+
 func (db *DB) GetChirps() ([]Chirp, error) {
 	db.mux.Lock()
 	defer db.mux.Unlock()
