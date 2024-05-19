@@ -17,7 +17,7 @@ func main() {
 		db.RemoveDBFile()
 	}
 
-	const filepathRoot = "."
+	const filepathRoot = "./html"
 	const port = "8080"
 
 	serveMux := http.NewServeMux()

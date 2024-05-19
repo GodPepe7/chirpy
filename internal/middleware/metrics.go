@@ -16,7 +16,7 @@ func (cfg *ApiConfig) MiddlewareMetricsInc(next http.Handler) http.Handler {
 	})
 }
 
-var tmpl = template.Must(template.ParseFiles("metrics.html"))
+var tmpl = template.Must(template.ParseFiles("./html/metrics.html"))
 
 func (cfg *ApiConfig) MetricsHandler(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "text/html")
