@@ -15,6 +15,8 @@ type parameters struct {
 	Body string `json:"body"`
 }
 
+var database *db.DB
+
 func main() {
 	const filepathRoot = "."
 	const port = "8080"
@@ -31,6 +33,12 @@ func main() {
 	serveMux.HandleFunc("GET /admin/metrics", apiConfig.MetricsHandler)
 
 	server := &http.Server{Addr: ":" + port, Handler: serveMux}
+	db, err := db.NewDB("database")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	database = db
 
 	log.Printf("Serving files from %s on port: %s\n", filepathRoot, port)
 	log.Fatal(server.ListenAndServe())
@@ -44,7 +52,12 @@ func healthzHandler(rw http.ResponseWriter, req *http.Request) {
 
 func getChirpHandler(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
-
+	chirps, err := database.GetChirps()
+	if err != nil {
+		fmt.Println(err)
+		respondWithError(rw, 500, "Something went wrong with getting chirps")
+	}
+	respondWithJSON(rw, 200, chirps)
 }
 
 func postChirpHandler(rw http.ResponseWriter, req *http.Request) {
@@ -63,17 +76,12 @@ func postChirpHandler(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	cleanedString := replaceBadWords(params.Body)
-	db, err := db.NewDB("database")
+	chirp, err := database.CreateChirp(cleanedString)
 	if err != nil {
 		fmt.Println(err)
 		respondWithError(rw, 500, "Something went wrong")
 	}
-	chirp, err := db.CreateChirp(cleanedString)
-	if err != nil {
-		fmt.Println(err)
-		respondWithError(rw, 500, "Something went wrong")
-	}
-	respondWithJSON(rw, 200, chirp)
+	respondWithJSON(rw, 201, chirp)
 }
 
 func respondWithError(rw http.ResponseWriter, code int, msg string) {

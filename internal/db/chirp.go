@@ -13,8 +13,8 @@ type DB struct {
 }
 
 type Chirp struct {
-	id   int    `json:"id"`
-	body string `json:"body"`
+	Id   int    `json:"id"`
+	Body string `json:"body"`
 }
 
 type DBStructure struct {
@@ -36,22 +36,25 @@ func (db *DB) ensureDB() error {
 }
 
 func (db *DB) loadDB() (DBStructure, error) {
+	dbStruct := DBStructure{Chirps: map[int]Chirp{}}
 	content, err := os.ReadFile(db.path)
 	if err != nil {
-		return DBStructure{}, fmt.Errorf("error while reading db file: %v", err)
+		return dbStruct, fmt.Errorf("error while reading db file: %v", err)
 	}
-	dbStruct := DBStructure{}
+	if len(content) == 0 {
+		return dbStruct, nil
+	}
 	err = json.Unmarshal(content, &dbStruct)
 	if err != nil {
-		return DBStructure{}, fmt.Errorf("error unmarshaling db file content '%v': %v", string(content), err)
+		return dbStruct, fmt.Errorf("error unmarshaling db file content '%v': %v", string(content), err)
 	}
 	return dbStruct, nil
 }
 
 func (db *DB) writeDB(dbStruct DBStructure) error {
-	jsonByte, err := json.Marshal(dbStruct.Chirps)
+	jsonByte, err := json.Marshal(dbStruct)
 	if err != nil {
-		return fmt.Errorf("error while marshaling db structure %v: %v", dbStruct.Chirps, err)
+		return fmt.Errorf("error while marshaling db structure %v: %v", dbStruct, err)
 	}
 	err = os.WriteFile(db.path, jsonByte, 0666)
 	if err != nil {
@@ -60,14 +63,15 @@ func (db *DB) writeDB(dbStruct DBStructure) error {
 	return nil
 }
 
-// CreateChirp creates a new chirp and saves it to disk
 func (db *DB) CreateChirp(body string) (Chirp, error) {
+	db.mux.Lock()
+	defer db.mux.Unlock()
 	dbStruct, err := db.loadDB()
 	if err != nil {
 		return Chirp{}, err
 	}
 	id := len(dbStruct.Chirps) + 1
-	chirp := Chirp{id, body}
+	chirp := Chirp{Id: id, Body: body}
 	dbStruct.Chirps[id] = chirp
 	err = db.writeDB(dbStruct)
 	if err != nil {
@@ -76,8 +80,9 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 	return chirp, nil
 }
 
-// GetChirps returns all chirps in the database
 func (db *DB) GetChirps() ([]Chirp, error) {
+	db.mux.Lock()
+	defer db.mux.Unlock()
 	dbStruct, err := db.loadDB()
 	if err != nil {
 		return nil, err
