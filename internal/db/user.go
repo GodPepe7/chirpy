@@ -10,6 +10,11 @@ type User struct {
 	Password string `json:"password"`
 }
 
+type UserParams struct {
+	Email    string
+	Password string
+}
+
 func (db *DB) CreateUser(email, password string) (User, error) {
 	db.mux.Lock()
 	defer db.mux.Unlock()
@@ -41,4 +46,16 @@ func (db *DB) GetUserByEmail(email string) (User, error) {
 		}
 	}
 	return User{}, nil
+}
+
+func (db *DB) UpdateUser(id int, updated UserParams) (User, error) {
+	db.mux.Lock()
+	defer db.mux.Unlock()
+	dbStruct, err := db.loadDB()
+	if err != nil {
+		return User{}, err
+	}
+	user := dbStruct.Users[id]
+	dbStruct.Users[id] = User{Id: user.Id, Email: updated.Email, Password: updated.Password}
+	return dbStruct.Users[id], nil
 }

@@ -13,9 +13,9 @@ type chirpParams struct {
 	Body string `json:"body"`
 }
 
-func (h *Handler) GetChirpHandler(rw http.ResponseWriter, req *http.Request) {
+func (cfg *ApiConfig) GetChirpHandler(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
-	chirps, err := h.db.GetChirps()
+	chirps, err := cfg.DB.GetChirps()
 	if err != nil {
 		fmt.Println(err)
 		utils.RespondWithError(rw, 500, "Something went wrong with getting chirps")
@@ -24,7 +24,7 @@ func (h *Handler) GetChirpHandler(rw http.ResponseWriter, req *http.Request) {
 	utils.RespondWithJSON(rw, 200, chirps)
 }
 
-func (h *Handler) GetChirpByIdHandler(rw http.ResponseWriter, req *http.Request) {
+func (cfg *ApiConfig) GetChirpByIdHandler(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	idValue := req.PathValue("id")
 	chirpID, err := strconv.Atoi(idValue)
@@ -32,7 +32,7 @@ func (h *Handler) GetChirpByIdHandler(rw http.ResponseWriter, req *http.Request)
 		utils.RespondWithError(rw, 400, "Something went wrong parsing the id, has to be a number")
 		return
 	}
-	chirp, err := h.db.GetChirpById(chirpID)
+	chirp, err := cfg.DB.GetChirpById(chirpID)
 	if chirp.Id == 0 && err == nil {
 		utils.RespondWithError(rw, 404, fmt.Sprintf("Chirp with ID %v doesn't exist", chirpID))
 		return
@@ -40,7 +40,7 @@ func (h *Handler) GetChirpByIdHandler(rw http.ResponseWriter, req *http.Request)
 	utils.RespondWithJSON(rw, 200, chirp)
 }
 
-func (h *Handler) PostChirpHandler(rw http.ResponseWriter, req *http.Request) {
+func (cfg *ApiConfig) PostChirpHandler(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(req.Body)
 	params := chirpParams{}
@@ -56,7 +56,7 @@ func (h *Handler) PostChirpHandler(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	cleanedString := utils.ReplaceBadWords(params.Body)
-	chirp, err := h.db.CreateChirp(cleanedString)
+	chirp, err := cfg.DB.CreateChirp(cleanedString)
 	if err != nil {
 		fmt.Println(err)
 		utils.RespondWithError(rw, 500, "Something went wrong")

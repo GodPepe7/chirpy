@@ -3,11 +3,14 @@ package handler
 import (
 	"html/template"
 	"net/http"
+
+	"github.com/godpepe7/chirpy/internal/db"
 )
 
 type ApiConfig struct {
 	FileserverHits int
 	JwtSecret      string
+	DB             *db.DB
 }
 
 func (cfg *ApiConfig) MiddlewareMetricsInc(next http.Handler) http.Handler {

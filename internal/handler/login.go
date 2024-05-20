@@ -4,18 +4,25 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/godpepe7/chirpy/internal/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type LoginParams struct {
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	ExpiresIn string `json:"expires_in_seconds"`
+	Email            string `json:"email"`
+	Password         string `json:"password"`
+	ExpiresInSeconds int    `json:"expires_in_seconds"`
 }
 
-func (h *Handler) PostLoginHandler(rw http.ResponseWriter, req *http.Request) {
+type LoginResponse struct {
+	Id    int    `json:"id"`
+	Email string `json:"email"`
+	Token string `json:"token"`
+}
+
+func (cfg *ApiConfig) PostLoginHandler(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(req.Body)
 	params := LoginParams{}
@@ -25,7 +32,7 @@ func (h *Handler) PostLoginHandler(rw http.ResponseWriter, req *http.Request) {
 		utils.RespondWithError(rw, 500, "Something went wrong")
 		return
 	}
-	user, err := h.db.GetUserByEmail(params.Email)
+	user, err := cfg.DB.GetUserByEmail(params.Email)
 	if err != nil {
 		fmt.Println(err)
 		utils.RespondWithError(rw, 500, "Something went wrong")
@@ -41,6 +48,18 @@ func (h *Handler) PostLoginHandler(rw http.ResponseWriter, req *http.Request) {
 		utils.RespondWithError(rw, 401, "Incorrect password")
 		return
 	}
-	userResponse := UserResponse{Id: user.Id, Email: user.Email}
+
+	const defaultExpirationInHours = 24
+	expiresIn := time.Duration(defaultExpirationInHours * time.Hour)
+	if params.ExpiresInSeconds != 0 {
+		expiresIn = time.Duration(params.ExpiresInSeconds * int(time.Second))
+	}
+	token, err := utils.CreateJwt(expiresIn, user.Id, cfg.JwtSecret)
+	if err != nil {
+		fmt.Println(err)
+		utils.RespondWithError(rw, 500, "Something went wrong creating the jwt token")
+	}
+
+	userResponse := LoginResponse{Id: user.Id, Email: user.Email, Token: token}
 	utils.RespondWithJSON(rw, 200, userResponse)
 }

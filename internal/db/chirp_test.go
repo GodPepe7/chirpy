@@ -6,7 +6,8 @@ import (
 
 func TestCreateChirp(t *testing.T) {
 	RemoveDBFile()
-	database, err := NewDB("database")
+	defer RemoveDBFile()
+	database, err := NewDB("../../database")
 	if err != nil {
 		t.Errorf("expected no errors: %v", err)
 		return
