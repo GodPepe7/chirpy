@@ -15,7 +15,7 @@ type chirpParams struct {
 
 func (h *Handler) GetChirpHandler(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
-	chirps, err := h.DB.GetChirps()
+	chirps, err := h.db.GetChirps()
 	if err != nil {
 		fmt.Println(err)
 		utils.RespondWithError(rw, 500, "Something went wrong with getting chirps")
@@ -32,8 +32,8 @@ func (h *Handler) GetChirpByIdHandler(rw http.ResponseWriter, req *http.Request)
 		utils.RespondWithError(rw, 400, "Something went wrong parsing the id, has to be a number")
 		return
 	}
-	chirp, err := h.DB.GetChirpById(chirpID)
-	if err != nil {
+	chirp, err := h.db.GetChirpById(chirpID)
+	if chirp.Id == 0 && err == nil {
 		utils.RespondWithError(rw, 404, fmt.Sprintf("Chirp with ID %v doesn't exist", chirpID))
 		return
 	}
@@ -56,7 +56,7 @@ func (h *Handler) PostChirpHandler(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	cleanedString := utils.ReplaceBadWords(params.Body)
-	chirp, err := h.DB.CreateChirp(cleanedString)
+	chirp, err := h.db.CreateChirp(cleanedString)
 	if err != nil {
 		fmt.Println(err)
 		utils.RespondWithError(rw, 500, "Something went wrong")

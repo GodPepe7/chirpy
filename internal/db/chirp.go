@@ -35,7 +35,7 @@ func (db *DB) GetChirpById(id int) (Chirp, error) {
 	}
 	chirp, ok := dbStruct.Chirps[id]
 	if !ok {
-		return Chirp{}, fmt.Errorf("chirpID %v doesn't exist in db", id)
+		return Chirp{}, nil
 	}
 	return chirp, nil
 }
