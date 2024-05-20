@@ -4,10 +4,11 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 
-	"github.com/godpepe7/chirpy/handler"
 	"github.com/godpepe7/chirpy/internal/db"
-	"github.com/godpepe7/chirpy/internal/middleware"
+	"github.com/godpepe7/chirpy/internal/handler"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -17,12 +18,16 @@ func main() {
 		db.RemoveDBFile()
 	}
 
+	// by default, godotenv will look for a file named .env in the current directory
+	godotenv.Load()
+	jwtSecret := os.Getenv("JWT_SECRET")
+
 	const filepathRoot = "./html"
 	const port = "8080"
 
 	serveMux := http.NewServeMux()
 	fsHandler := http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))
-	apiConfig := middleware.ApiConfig{FileserverHits: 0}
+	apiConfig := handler.ApiConfig{FileserverHits: 0, JwtSecret: jwtSecret}
 	database, err := db.NewDB("database")
 	if err != nil {
 		log.Fatal(err)

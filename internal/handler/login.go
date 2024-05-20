@@ -10,8 +10,9 @@ import (
 )
 
 type LoginParams struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+	ExpiresIn string `json:"expires_in_seconds"`
 }
 
 func (h *Handler) PostLoginHandler(rw http.ResponseWriter, req *http.Request) {

@@ -1,4 +1,4 @@
-package middleware
+package handler
 
 import (
 	"html/template"
@@ -7,6 +7,7 @@ import (
 
 type ApiConfig struct {
 	FileserverHits int
+	JwtSecret      string
 }
 
 func (cfg *ApiConfig) MiddlewareMetricsInc(next http.Handler) http.Handler {

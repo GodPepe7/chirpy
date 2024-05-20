@@ -1,3 +1,4 @@
 out
 database.json
 go.sum
+.env
