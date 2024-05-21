@@ -67,7 +67,7 @@ func (cfg *ApiConfig) PutUserHandler(rw http.ResponseWriter, req *http.Request) 
 		utils.RespondWithError(rw, 401, "Needs authorization header with token")
 		return
 	}
-	token = strings.Trim(token, "Bearer ")
+	token = strings.Replace(token, "Bearer ", "", 1)
 	jwt, err := utils.ParseJwt(token, cfg.JwtSecret)
 	if err != nil {
 		fmt.Println(err)

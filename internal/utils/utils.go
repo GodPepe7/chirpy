@@ -72,5 +72,8 @@ func ParseJwt(token, secret string) (*jwt.Token, error) {
 	if err != nil {
 		return nil, err
 	}
+	if !jwt.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
 	return jwt, nil
 }

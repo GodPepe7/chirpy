@@ -57,5 +57,6 @@ func (db *DB) UpdateUser(id int, updated UserParams) (User, error) {
 	}
 	user := dbStruct.Users[id]
 	dbStruct.Users[id] = User{Id: user.Id, Email: updated.Email, Password: updated.Password}
+	db.writeDB(dbStruct)
 	return dbStruct.Users[id], nil
 }
