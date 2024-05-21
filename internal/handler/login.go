@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/godpepe7/chirpy/internal/utils"
 	"golang.org/x/crypto/bcrypt"
@@ -17,9 +16,10 @@ type LoginParams struct {
 }
 
 type LoginResponse struct {
-	Id    int    `json:"id"`
-	Email string `json:"email"`
-	Token string `json:"token"`
+	Id           int    `json:"id"`
+	Email        string `json:"email"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 func (cfg *ApiConfig) PostLoginHandler(rw http.ResponseWriter, req *http.Request) {
@@ -49,17 +49,17 @@ func (cfg *ApiConfig) PostLoginHandler(rw http.ResponseWriter, req *http.Request
 		return
 	}
 
-	const defaultExpirationInHours = 24
-	expiresIn := time.Duration(defaultExpirationInHours * time.Hour)
-	if params.ExpiresInSeconds != 0 {
-		expiresIn = time.Duration(params.ExpiresInSeconds * int(time.Second))
-	}
-	token, err := utils.CreateJwt(expiresIn, user.Id, cfg.JwtSecret)
+	token, err := utils.CreateJwt(0, user.Id, cfg.JwtSecret)
 	if err != nil {
 		fmt.Println(err)
 		utils.RespondWithError(rw, 500, "Something went wrong creating the jwt token")
+		return
 	}
 
-	userResponse := LoginResponse{Id: user.Id, Email: user.Email, Token: token}
+	refreshToken, err := cfg.DB.CreateRefreshToken(user.Id)
+	if err != nil {
+		fmt.Println(err)
+	}
+	userResponse := LoginResponse{Id: user.Id, Email: user.Email, Token: token, RefreshToken: refreshToken.Token}
 	utils.RespondWithJSON(rw, 200, userResponse)
 }

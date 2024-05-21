@@ -46,7 +46,13 @@ func ReplaceBadWords(input string) string {
 	return strings.Join(split, " ")
 }
 
-func CreateJwt(expiresIn time.Duration, userId int, secret string) (string, error) {
+// Creates Jwt for user which expires in 1 hour if 0 is given as expiresInSeconds
+func CreateJwt(expiresInSeconds int, userId int, secret string) (string, error) {
+	const defaultExpirationInHours = 1
+	expiresIn := time.Duration(defaultExpirationInHours * time.Hour)
+	if expiresIn != 0 {
+		expiresIn = time.Duration(expiresInSeconds * int(time.Second))
+	}
 	userIdAsString := strconv.Itoa(userId)
 	issuedAt := jwt.NewNumericDate(time.Now())
 	expiredAt := jwt.NewNumericDate(issuedAt.Add(expiresIn))
