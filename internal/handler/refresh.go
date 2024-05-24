@@ -23,7 +23,7 @@ func (cfg *ApiConfig) PostRefreshHandler(rw http.ResponseWriter, req *http.Reque
 	refreshToken, err := cfg.DB.GetRefreshTokenByToken(headerToken)
 	if err != nil {
 		fmt.Println(err)
-		utils.RespondWithError(rw, 404, fmt.Sprintf("Couldn't find Refresh Token '%v'", refreshToken))
+		utils.RespondWithError(rw, 401, "")
 		return
 	}
 	accessToken, err := utils.CreateJwt(0, refreshToken.UserId, cfg.JwtSecret)

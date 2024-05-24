@@ -42,6 +42,8 @@ func main() {
 	serveMux.HandleFunc("POST /api/users", apiConfig.PostUserHandler)
 	serveMux.HandleFunc("PUT /api/users", apiConfig.PutUserHandler)
 	serveMux.HandleFunc("POST /api/login", apiConfig.PostLoginHandler)
+	serveMux.HandleFunc("POST /api/revoke", apiConfig.PostRevokeHandler)
+	serveMux.HandleFunc("POST /api/refresh", apiConfig.PostRefreshHandler)
 	serveMux.HandleFunc("GET /admin/metrics", apiConfig.MetricsHandler)
 
 	server := &http.Server{Addr: ":" + port, Handler: serveMux}

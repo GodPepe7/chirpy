@@ -50,7 +50,7 @@ func ReplaceBadWords(input string) string {
 func CreateJwt(expiresInSeconds int, userId int, secret string) (string, error) {
 	const defaultExpirationInHours = 1
 	expiresIn := time.Duration(defaultExpirationInHours * time.Hour)
-	if expiresIn != 0 {
+	if expiresInSeconds != 0 {
 		expiresIn = time.Duration(expiresInSeconds * int(time.Second))
 	}
 	userIdAsString := strconv.Itoa(userId)

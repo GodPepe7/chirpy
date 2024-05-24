@@ -34,7 +34,7 @@ func (db *DB) ensureDB() error {
 }
 
 func (db *DB) loadDB() (DBStructure, error) {
-	dbStruct := DBStructure{Chirps: map[int]Chirp{}, Users: map[int]User{}}
+	dbStruct := DBStructure{Chirps: map[int]Chirp{}, Users: map[int]User{}, Tokens: map[int]RefreshToken{}}
 	content, err := os.ReadFile(db.path)
 	if err != nil {
 		return dbStruct, fmt.Errorf("error while reading db file: %v", err)

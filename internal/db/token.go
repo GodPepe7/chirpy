@@ -9,7 +9,7 @@ import (
 
 type RefreshToken struct {
 	Token     string    `json:"refresh_token"`
-	ExpiresAt time.Time `json:"expres_at"`
+	ExpiresAt time.Time `json:"expires_at"`
 	UserId    int       `json:"user_id"`
 }
 
@@ -28,6 +28,7 @@ func (db *DB) CreateRefreshToken(userId int) (RefreshToken, error) {
 	expiresAt := time.Now().Add(time.Duration(60 * 24 * time.Hour))
 	refreshToken := RefreshToken{Token: token, ExpiresAt: expiresAt, UserId: userId}
 	dbStruct.Tokens[userId] = refreshToken
+	db.writeDB(dbStruct)
 	return refreshToken, nil
 }
 
@@ -56,6 +57,7 @@ func (db *DB) DeleteRefreshToken(token string) error {
 	for key, refreshToken := range dbStruct.Tokens {
 		if refreshToken.Token == token {
 			delete(dbStruct.Tokens, key)
+			db.writeDB(dbStruct)
 			return nil
 		}
 	}
