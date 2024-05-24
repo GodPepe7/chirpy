@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/godpepe7/chirpy/internal/db"
 	"github.com/godpepe7/chirpy/internal/utils"
@@ -16,7 +18,7 @@ type UserParams struct {
 }
 
 type UserResponse struct {
-	Id    string `json:"id"`
+	Id    int    `json:"id"`
 	Email string `json:"email"`
 }
 
@@ -30,7 +32,7 @@ func (cfg *ApiConfig) PostUserHandler(rw http.ResponseWriter, req *http.Request)
 		utils.RespondWithError(rw, 500, "Something went wrong")
 		return
 	}
-	if existingUser, err := cfg.DB.GetUserByEmail(params.Email); existingUser.Id != "" && err == nil {
+	if existingUser, err := cfg.DB.GetUserByEmail(params.Email); existingUser.Id != 0 && err == nil {
 		utils.RespondWithError(rw, 400, fmt.Sprintf("user already exists with email: %v", params.Email))
 		return
 	}
@@ -59,13 +61,20 @@ func (cfg *ApiConfig) PutUserHandler(rw http.ResponseWriter, req *http.Request) 
 		utils.RespondWithError(rw, 500, "Something went wrong")
 		return
 	}
-	jwt, err := utils.GetTokenFromHeader(req, cfg.JwtSecret)
+	token := req.Header.Get("Authorization")
+	if token == "" {
+		fmt.Println(err)
+		utils.RespondWithError(rw, 401, "Needs authorization header with token")
+		return
+	}
+	token = strings.Replace(token, "Bearer ", "", 1)
+	jwt, err := utils.ParseJwt(token, cfg.JwtSecret)
 	if err != nil {
 		fmt.Println(err)
 		utils.RespondWithError(rw, 401, "Invalid token")
 		return
 	}
-	userId, err := jwt.Claims.GetSubject()
+	idString, err := jwt.Claims.GetSubject()
 	if err != nil {
 		fmt.Println(err)
 		utils.RespondWithError(rw, 500, "Error getting id from token")
@@ -77,7 +86,13 @@ func (cfg *ApiConfig) PutUserHandler(rw http.ResponseWriter, req *http.Request) 
 		utils.RespondWithError(rw, 500, "Something went wrong updating the user")
 		return
 	}
-	user, err := cfg.DB.UpdateUser(userId, db.UserParams{Email: params.Email, Password: string(hashedPassword)})
+	id, err := strconv.Atoi(idString)
+	if err != nil {
+		fmt.Println(err)
+		utils.RespondWithError(rw, 500, "Something went wrong updating the user")
+		return
+	}
+	user, err := cfg.DB.UpdateUser(id, db.UserParams{Email: params.Email, Password: string(hashedPassword)})
 	if err != nil {
 		fmt.Println(err)
 		utils.RespondWithError(rw, 500, "Something went wrong updating the user")

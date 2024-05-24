@@ -10,13 +10,11 @@ import (
 type RefreshToken struct {
 	Token     string    `json:"refresh_token"`
 	ExpiresAt time.Time `json:"expires_at"`
-	UserId    string    `json:"user_id"`
+	UserId    int       `json:"user_id"`
 }
 
-func (db *DB) CreateRefreshToken(userId string) (RefreshToken, error) {
+func (db *DB) CreateRefreshToken(userId int) (RefreshToken, error) {
 	dbStruct, err := db.loadDB()
-	db.mux.Lock()
-	defer db.mux.Unlock()
 	if err != nil {
 		return RefreshToken{}, err
 	}
@@ -36,8 +34,6 @@ func (db *DB) CreateRefreshToken(userId string) (RefreshToken, error) {
 
 func (db *DB) GetRefreshTokenByToken(token string) (RefreshToken, error) {
 	dbStruct, err := db.loadDB()
-	db.mux.Lock()
-	defer db.mux.Unlock()
 	if err != nil {
 		return RefreshToken{}, err
 	}
@@ -55,8 +51,6 @@ func (db *DB) GetRefreshTokenByToken(token string) (RefreshToken, error) {
 
 func (db *DB) DeleteRefreshToken(token string) error {
 	dbStruct, err := db.loadDB()
-	db.mux.Lock()
-	defer db.mux.Unlock()
 	if err != nil {
 		return err
 	}

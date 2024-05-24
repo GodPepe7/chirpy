@@ -14,9 +14,9 @@ type DB struct {
 }
 
 type DBStructure struct {
-	Chirps map[string]Chirp        `json:"chirps"`
-	Users  map[string]User         `json:"users"`
-	Tokens map[string]RefreshToken `json:"refresh_tokens"`
+	Chirps map[int]Chirp        `json:"chirps"`
+	Users  map[int]User         `json:"users"`
+	Tokens map[int]RefreshToken `json:"refresh_tokens"`
 }
 
 func NewDB(path string) (*DB, error) {
@@ -34,7 +34,7 @@ func (db *DB) ensureDB() error {
 }
 
 func (db *DB) loadDB() (DBStructure, error) {
-	dbStruct := DBStructure{Chirps: map[string]Chirp{}, Users: map[string]User{}, Tokens: map[string]RefreshToken{}}
+	dbStruct := DBStructure{Chirps: map[int]Chirp{}, Users: map[int]User{}, Tokens: map[int]RefreshToken{}}
 	content, err := os.ReadFile(db.path)
 	if err != nil {
 		return dbStruct, fmt.Errorf("error while reading db file: %v", err)

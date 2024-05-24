@@ -2,12 +2,10 @@ package db
 
 import (
 	"fmt"
-
-	"github.com/google/uuid"
 )
 
 type User struct {
-	Id       string `json:"id"`
+	Id       int    `json:"id"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
@@ -25,7 +23,7 @@ func (db *DB) CreateUser(email, password string) (User, error) {
 		return User{}, err
 	}
 
-	id := uuid.NewString()
+	id := len(dbStruct.Users) + 1
 	user := User{Id: id, Email: email, Password: password}
 	dbStruct.Users[id] = user
 	err = db.writeDB(dbStruct)
@@ -50,7 +48,7 @@ func (db *DB) GetUserByEmail(email string) (User, error) {
 	return User{}, nil
 }
 
-func (db *DB) UpdateUser(id string, updated UserParams) (User, error) {
+func (db *DB) UpdateUser(id int, updated UserParams) (User, error) {
 	db.mux.Lock()
 	defer db.mux.Unlock()
 	dbStruct, err := db.loadDB()

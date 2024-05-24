@@ -16,7 +16,7 @@ type LoginParams struct {
 }
 
 type LoginResponse struct {
-	Id           string `json:"id"`
+	Id           int    `json:"id"`
 	Email        string `json:"email"`
 	Token        string `json:"token"`
 	RefreshToken string `json:"refresh_token"`
@@ -38,7 +38,7 @@ func (cfg *ApiConfig) PostLoginHandler(rw http.ResponseWriter, req *http.Request
 		utils.RespondWithError(rw, 500, "Something went wrong")
 		return
 	}
-	if user.Id == "" {
+	if user.Id == 0 {
 		fmt.Println(err)
 		utils.RespondWithError(rw, 404, fmt.Sprintf("No such user exists with email: %v", params.Email))
 		return

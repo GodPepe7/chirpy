@@ -12,14 +12,17 @@ func TestCreateChirp(t *testing.T) {
 		t.Errorf("expected no errors: %v", err)
 		return
 	}
-	user, _ := database.CreateUser("test@test.com", "1234")
-	chirp, err := database.CreateChirp("test", user.Id)
+	chirp, err := database.CreateChirp("test")
 	if err != nil {
 		t.Errorf("expected no errors: %v", err)
 		return
 	}
 	if chirp.Body != "test" {
 		t.Errorf("expected body to be 'test' instead of: %v", chirp.Body)
+		return
+	}
+	if chirp.Id != 1 {
+		t.Errorf("expected id to be '1' instead of: %v", chirp.Id)
 		return
 	}
 
@@ -32,7 +35,7 @@ func TestCreateChirp(t *testing.T) {
 		t.Errorf("expected exactly one chirp instead of: %v", len(chirps))
 		return
 	}
-	if chirps[0].Id != chirp.Id && chirps[0].Body != "test" {
+	if chirps[0].Id != 1 && chirps[0].Body != "test" {
 		t.Errorf("expected received chirp to be identical to created one: %v, %v", chirps[0], chirp)
 		return
 	}

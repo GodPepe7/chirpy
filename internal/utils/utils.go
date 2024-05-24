@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -46,12 +47,13 @@ func ReplaceBadWords(input string) string {
 }
 
 // Creates Jwt for user which expires in 1 hour if 0 is given as expiresInSeconds
-func CreateJwt(expiresInSeconds int, userId string, secret string) (string, error) {
+func CreateJwt(expiresInSeconds int, userId int, secret string) (string, error) {
 	const defaultExpirationInHours = 1
 	expiresIn := time.Duration(defaultExpirationInHours * time.Hour)
 	if expiresInSeconds != 0 {
 		expiresIn = time.Duration(expiresInSeconds * int(time.Second))
 	}
+	userIdAsString := strconv.Itoa(userId)
 	issuedAt := jwt.NewNumericDate(time.Now())
 	expiredAt := jwt.NewNumericDate(issuedAt.Add(expiresIn))
 	jwtToken := jwt.NewWithClaims(
@@ -60,7 +62,7 @@ func CreateJwt(expiresInSeconds int, userId string, secret string) (string, erro
 			Issuer:    "chirpy",
 			IssuedAt:  issuedAt,
 			ExpiresAt: expiredAt,
-			Subject:   userId,
+			Subject:   userIdAsString,
 		})
 	signedJwt, err := jwtToken.SignedString([]byte(secret))
 	if err != nil {
@@ -78,19 +80,6 @@ func ParseJwt(token, secret string) (*jwt.Token, error) {
 	}
 	if !jwt.Valid {
 		return nil, fmt.Errorf("invalid token")
-	}
-	return jwt, nil
-}
-
-func GetTokenFromHeader(req *http.Request, secret string) (*jwt.Token, error) {
-	token := req.Header.Get("Authorization")
-	if token == "" {
-		return nil, fmt.Errorf("no Authorization header found")
-	}
-	token = strings.Replace(token, "Bearer ", "", 1)
-	jwt, err := ParseJwt(token, secret)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't parse jwt: %v", err)
 	}
 	return jwt, nil
 }
