@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/godpepe7/chirpy/internal/utils"
 )
@@ -26,15 +25,10 @@ func (cfg *ApiConfig) GetChirpHandler(rw http.ResponseWriter, req *http.Request)
 
 func (cfg *ApiConfig) GetChirpByIdHandler(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
-	idValue := req.PathValue("id")
-	chirpID, err := strconv.Atoi(idValue)
-	if err != nil {
-		utils.RespondWithError(rw, 400, "Something went wrong parsing the id, has to be a number")
-		return
-	}
-	chirp, err := cfg.DB.GetChirpById(chirpID)
-	if chirp.Id == 0 && err == nil {
-		utils.RespondWithError(rw, 404, fmt.Sprintf("Chirp with ID %v doesn't exist", chirpID))
+	chirpId := req.PathValue("id")
+	chirp, err := cfg.DB.GetChirpById(chirpId)
+	if chirp.Id == "" && err == nil {
+		utils.RespondWithError(rw, 404, fmt.Sprintf("Chirp with ID %v doesn't exist", chirpId))
 		return
 	}
 	utils.RespondWithJSON(rw, 200, chirp)
@@ -54,9 +48,20 @@ func (cfg *ApiConfig) PostChirpHandler(rw http.ResponseWriter, req *http.Request
 		utils.RespondWithError(rw, 400, "Chirp is too long")
 		return
 	}
-
+	jwt, err := utils.GetTokenFromHeader(req, cfg.JwtSecret)
+	if err != nil {
+		fmt.Println(err)
+		utils.RespondWithError(rw, 401, "Invalid token")
+		return
+	}
+	userId, err := jwt.Claims.GetSubject()
+	if err != nil {
+		fmt.Println(err)
+		utils.RespondWithError(rw, 500, "Error getting id from token")
+		return
+	}
 	cleanedString := utils.ReplaceBadWords(params.Body)
-	chirp, err := cfg.DB.CreateChirp(cleanedString)
+	chirp, err := cfg.DB.CreateChirp(cleanedString, userId)
 	if err != nil {
 		fmt.Println(err)
 		utils.RespondWithError(rw, 500, "Something went wrong")
