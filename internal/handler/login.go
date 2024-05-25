@@ -18,6 +18,7 @@ type LoginParams struct {
 type LoginResponse struct {
 	Id           int    `json:"id"`
 	Email        string `json:"email"`
+	IsChirpyRed  bool   `json:"is_chirpy_red"`
 	Token        string `json:"token"`
 	RefreshToken string `json:"refresh_token"`
 }
@@ -60,6 +61,12 @@ func (cfg *ApiConfig) PostLoginHandler(rw http.ResponseWriter, req *http.Request
 	if err != nil {
 		fmt.Println(err)
 	}
-	userResponse := LoginResponse{Id: user.Id, Email: user.Email, Token: token, RefreshToken: refreshToken.Token}
+	userResponse := LoginResponse{
+		Id:           user.Id,
+		Email:        user.Email,
+		IsChirpyRed:  user.IsChirpyRed,
+		Token:        token,
+		RefreshToken: refreshToken.Token,
+	}
 	utils.RespondWithJSON(rw, 200, userResponse)
 }

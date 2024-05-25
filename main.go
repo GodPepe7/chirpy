@@ -21,6 +21,7 @@ func main() {
 	// by default, godotenv will look for a file named .env in the current directory
 	godotenv.Load()
 	jwtSecret := os.Getenv("JWT_SECRET")
+	polkaKey := os.Getenv("POLKA_KEY")
 	const filepathRoot = "./html"
 	const port = "8080"
 
@@ -31,7 +32,7 @@ func main() {
 
 	serveMux := http.NewServeMux()
 	fsHandler := http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))
-	apiConfig := handler.ApiConfig{FileserverHits: 0, JwtSecret: jwtSecret, DB: database}
+	apiConfig := handler.ApiConfig{FileserverHits: 0, JwtSecret: jwtSecret, DB: database, PolkaKey: polkaKey}
 
 	serveMux.Handle("/app/*", apiConfig.MiddlewareMetricsInc(fsHandler))
 	serveMux.HandleFunc("GET /api/healthz", handler.HealthzHandler)
@@ -45,6 +46,7 @@ func main() {
 	serveMux.HandleFunc("POST /api/login", apiConfig.PostLoginHandler)
 	serveMux.HandleFunc("POST /api/revoke", apiConfig.PostRevokeHandler)
 	serveMux.HandleFunc("POST /api/refresh", apiConfig.PostRefreshHandler)
+	serveMux.HandleFunc("POST /api/polka/webhooks", apiConfig.PostPolkaWebhookHandler)
 	serveMux.HandleFunc("GET /admin/metrics", apiConfig.MetricsHandler)
 
 	server := &http.Server{Addr: ":" + port, Handler: serveMux}
