@@ -33,6 +33,8 @@ func (db *DB) CreateRefreshToken(userId int) (RefreshToken, error) {
 }
 
 func (db *DB) GetRefreshTokenByToken(token string) (RefreshToken, error) {
+	db.mux.Lock()
+	defer db.mux.Unlock()
 	dbStruct, err := db.loadDB()
 	if err != nil {
 		return RefreshToken{}, err
@@ -50,6 +52,8 @@ func (db *DB) GetRefreshTokenByToken(token string) (RefreshToken, error) {
 }
 
 func (db *DB) DeleteRefreshToken(token string) error {
+	db.mux.Lock()
+	defer db.mux.Unlock()
 	dbStruct, err := db.loadDB()
 	if err != nil {
 		return err

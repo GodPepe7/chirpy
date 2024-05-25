@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/godpepe7/chirpy/internal/db"
 	"github.com/godpepe7/chirpy/internal/utils"
@@ -61,17 +60,10 @@ func (cfg *ApiConfig) PutUserHandler(rw http.ResponseWriter, req *http.Request) 
 		utils.RespondWithError(rw, 500, "Something went wrong")
 		return
 	}
-	token := req.Header.Get("Authorization")
-	if token == "" {
-		fmt.Println(err)
-		utils.RespondWithError(rw, 401, "Needs authorization header with token")
-		return
-	}
-	token = strings.Replace(token, "Bearer ", "", 1)
-	jwt, err := utils.ParseJwt(token, cfg.JwtSecret)
+	jwt, err := utils.GetTokenFromHeader(req, cfg.JwtSecret)
 	if err != nil {
 		fmt.Println(err)
-		utils.RespondWithError(rw, 401, "Invalid token")
+		utils.RespondWithError(rw, 401, "Invalid header format or token")
 		return
 	}
 	idString, err := jwt.Claims.GetSubject()
@@ -80,13 +72,13 @@ func (cfg *ApiConfig) PutUserHandler(rw http.ResponseWriter, req *http.Request) 
 		utils.RespondWithError(rw, 500, "Error getting id from token")
 		return
 	}
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(params.Password), 10)
+	id, err := strconv.Atoi(idString)
 	if err != nil {
 		fmt.Println(err)
 		utils.RespondWithError(rw, 500, "Something went wrong updating the user")
 		return
 	}
-	id, err := strconv.Atoi(idString)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(params.Password), 10)
 	if err != nil {
 		fmt.Println(err)
 		utils.RespondWithError(rw, 500, "Something went wrong updating the user")

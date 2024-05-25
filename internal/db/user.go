@@ -16,8 +16,6 @@ type UserParams struct {
 }
 
 func (db *DB) CreateUser(email, password string) (User, error) {
-	db.mux.Lock()
-	defer db.mux.Unlock()
 	dbStruct, err := db.loadDB()
 	if err != nil {
 		return User{}, err

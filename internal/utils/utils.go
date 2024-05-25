@@ -83,3 +83,16 @@ func ParseJwt(token, secret string) (*jwt.Token, error) {
 	}
 	return jwt, nil
 }
+
+func GetTokenFromHeader(req *http.Request, jwtSecret string) (*jwt.Token, error) {
+	token := req.Header.Get("Authorization")
+	if token == "" {
+		return nil, fmt.Errorf("no authorization header found")
+	}
+	token = strings.Replace(token, "Bearer ", "", 1)
+	jwt, err := ParseJwt(token, jwtSecret)
+	if err != nil {
+		return nil, err
+	}
+	return jwt, nil
+}

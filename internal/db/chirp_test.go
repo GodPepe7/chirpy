@@ -12,7 +12,7 @@ func TestCreateChirp(t *testing.T) {
 		t.Errorf("expected no errors: %v", err)
 		return
 	}
-	chirp, err := database.CreateChirp("test")
+	chirp, err := database.CreateChirp("test", 1)
 	if err != nil {
 		t.Errorf("expected no errors: %v", err)
 		return

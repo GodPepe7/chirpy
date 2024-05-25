@@ -55,12 +55,76 @@ func (cfg *ApiConfig) PostChirpHandler(rw http.ResponseWriter, req *http.Request
 		return
 	}
 
+	jwt, err := utils.GetTokenFromHeader(req, cfg.JwtSecret)
+	if err != nil {
+		fmt.Println(err)
+		utils.RespondWithError(rw, 401, "Invalid header format or token")
+		return
+	}
+	userIdString, err := jwt.Claims.GetSubject()
+	if err != nil {
+		fmt.Println(err)
+		utils.RespondWithError(rw, 500, "Error getting id from token")
+		return
+	}
+	userId, err := strconv.Atoi(userIdString)
+	if err != nil {
+		fmt.Println(err)
+		utils.RespondWithError(rw, 500, "Something went wrong updating the user")
+		return
+	}
 	cleanedString := utils.ReplaceBadWords(params.Body)
-	chirp, err := cfg.DB.CreateChirp(cleanedString)
+	chirp, err := cfg.DB.CreateChirp(cleanedString, userId)
 	if err != nil {
 		fmt.Println(err)
 		utils.RespondWithError(rw, 500, "Something went wrong")
 		return
 	}
 	utils.RespondWithJSON(rw, 201, chirp)
+}
+
+func (cfg *ApiConfig) DeleteChirpHandler(rw http.ResponseWriter, req *http.Request) {
+	chirpIdString := req.PathValue("id")
+	jwt, err := utils.GetTokenFromHeader(req, cfg.JwtSecret)
+	if err != nil {
+		fmt.Println(err)
+		utils.RespondWithError(rw, 401, "Invalid token header")
+		return
+	}
+	chirpId, err := strconv.Atoi(chirpIdString)
+	if err != nil {
+		fmt.Println(err)
+		utils.RespondWithError(rw, 500, "Something went wrong parsing the id, has to be a number")
+		return
+	}
+	userIdString, err := jwt.Claims.GetSubject()
+	if err != nil {
+		fmt.Println(err)
+		utils.RespondWithError(rw, 500, "Error getting id from token")
+		return
+	}
+	userId, err := strconv.Atoi(userIdString)
+	if err != nil {
+		fmt.Println(err)
+		utils.RespondWithError(rw, 500, "Something went wrong parsing the id, has to be a number")
+		return
+	}
+	println(userId)
+	chirp, err := cfg.DB.GetChirpById(chirpId)
+	if err != nil {
+		fmt.Println(err)
+		utils.RespondWithError(rw, 404, fmt.Sprintf("Chirp with ID %v couldn't be found", chirpId))
+		return
+	}
+	fmt.Println(chirp)
+	if chirp.UserId != userId {
+		utils.RespondWithError(rw, 403, "Unauthorized")
+		return
+	}
+	err = cfg.DB.DeleteChirp(chirpId)
+	if err != nil {
+		fmt.Println(err)
+		utils.RespondWithError(rw, 401, fmt.Sprintf("No such chirp with id: %v", chirpId))
+		return
+	}
 }
