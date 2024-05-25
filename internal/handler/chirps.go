@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 
+	"github.com/godpepe7/chirpy/internal/db"
 	"github.com/godpepe7/chirpy/internal/utils"
 )
 
@@ -21,7 +23,33 @@ func (cfg *ApiConfig) GetChirpHandler(rw http.ResponseWriter, req *http.Request)
 		utils.RespondWithError(rw, 500, "Something went wrong with getting chirps")
 		return
 	}
-	utils.RespondWithJSON(rw, 200, chirps)
+	authorFilter := req.URL.Query().Get("author_id")
+	sortFilter := req.URL.Query().Get("sort")
+	if sortFilter == "" || sortFilter == "asc" {
+		sort.SliceStable(chirps, func(i, j int) bool {
+			return chirps[i].Id < chirps[j].Id
+		})
+	} else if sortFilter == "desc" {
+		sort.SliceStable(chirps, func(i, j int) bool {
+			return chirps[i].Id > chirps[j].Id
+		})
+	}
+	if authorFilter == "" {
+		utils.RespondWithJSON(rw, 200, chirps)
+		return
+	}
+	userId, err := strconv.Atoi(sortFilter)
+	if err != nil {
+		fmt.Println(err)
+		utils.RespondWithError(rw, 401, "Pls enter a valid id number value")
+	}
+	filtered := []db.Chirp{}
+	for _, chirp := range chirps {
+		if chirp.UserId == userId {
+			filtered = append(filtered, chirp)
+		}
+	}
+	utils.RespondWithJSON(rw, 200, filtered)
 }
 
 func (cfg *ApiConfig) GetChirpByIdHandler(rw http.ResponseWriter, req *http.Request) {
